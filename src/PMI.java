@@ -16,7 +16,7 @@ public class PMI{
 	
 	//the data used in the Process of PMI
 	private Map<String,Double> DicWords;				//the input vocabulary which has already in the dictionarys
-	private Map<String,Map<String,Double>> UnKWords;						//	the input vocabulary which is not in the dictionarys
+	private Map<String,Double> UnKWords;						//	the input vocabulary which is not in the dictionarys
 	public PMI(int docnum){
 		this.InvertedIndex = new HashMap<String,List<Integer>>();
 		this.Dictionarys = new ArrayList<HashMap<String,Double>>();
