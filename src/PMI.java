@@ -11,32 +11,93 @@ public class PMI{
 	private Map<String,List<Integer>> InvertedIndex;	// Articles vocabulary iniverted Index
 	private List<HashMap<String,Double>> Dictionarys; 	//the Existing Dictionarys
 	private List<String> Words;							//the Input vocabulary
-	private int DocNum=0;										//the number of document
+	private int DocNum=0;								//the number of document
 	private List<Double> Threshold;
 	//the output data
-	private List<Map<String ,Double>> NewWords;				//output the PMI of each new input vocabulary
+	private List<Map<String ,Double>> NewWords;			//output the PMI of each new input vocabulary
+	private List<List<String>> NewWordList;
+	// output Words for different dictionary;
+	// NewWordList.get(i) is the new input word list for the i-th dictionary;
 	
 	//the data used in the Process of PMI
-	private Map<String,Double> DicWords;				//the input vocabulary which has already in the dictionarys
-	private Map<String,Double> UnKWords;						//	the input vocabulary which is not in the dictionarys
+	private Map<String,Double> DicWords;	
+		//the input vocabulary which has already in the dictionarys	P(x)
+	private Map<String,Double> UnKWords;	
+		//the input vocabulary which is not in the dictionarys	P(y)
 	private Map<String,Map<String,Double>> NewWordsPMIValue;
-	public PMI(int docnum,List<Double> threshold){
-		this.InvertedIndex = new HashMap<String,List<Integer>>();
-		this.Dictionarys = new ArrayList<HashMap<String,Double>>();
+		//the input vocabulary which is not in the dictionayrs P(x,y)/(P(x)*P(y))
+
+	public PMI(){
+		this.InvertedIndex=new HashMap<String,List<Integer>>();
+		this.Dictionarys= new ArrayList<HashMap<String,Double>>();
 		this.Dictionarys.add(new HashMap<String,Double>());
 		this.Words = new ArrayList<String>();
-		this.NewWords = new ArrayList<Map<String ,Double>>();
+		this.DocNum=0;
+		this.Threshold=new ArrayList<Double>();
+
+		this.DicWords= new HashMap<String,Double>();
+		this.UnKWords = new HashMap<String,Double>();
+		
+		this.NewWordsPMIValue = new HashMap<String,Map<String,Double>>();
+		
+		this.NewWords = new ArrayList<Map<String,Double>>();
+		this.NewWordList = new ArrayList<List<String>>();
+		for (int i=0;i<this.Dictionarys.size();i++){
+			this.NewWordList.add(new ArrayList<String>());
+			this.NewWords.add(new HashMap<String,Double>());
+		}
+
+	}
+	
+	public PMI(Map<String,List<Integer>> invertedindex,
+			List<HashMap<String,Double>> dictionary,
+			List<String> wordlist,			
+			int docnum,
+			List<Double> threshold){
+		this.InvertedIndex.putAll(invertedindex);
+		this.Dictionarys.addAll(dictionary);
+		this.Words.addAll(wordlist);
 		this.DocNum=docnum;
+		this.Threshold.addAll(threshold);
+		
+		this.DicWords= new HashMap<String,Double>();
+		this.UnKWords = new HashMap<String,Double>();
+		
+		this.NewWordsPMIValue = new HashMap<String,Map<String,Double>>();
+		
+		this.NewWords = new ArrayList<Map<String ,Double>>();
+		this.NewWordList = new ArrayList<List<String>>();
+		for (int i=0;i<this.Dictionarys.size();i++){
+			this.NewWordList.add(new ArrayList<String>());
+			this.NewWords.add(new HashMap<String,Double>());
+		}
+
+	}
+	
+	public void SetInvertedIndex( Map<String,List<Integer>> invertedindex){
+		this.InvertedIndex= null;
+		this.InvertedIndex.putAll(invertedindex);
+	}
+	public void SetDictionary(List<HashMap<String,Double>> dictionary){
+		this.Dictionarys= null;
+		this.Dictionarys.addAll( dictionary);
+	}
+	public void SetInputWords(List<String> wordlist){
+		this.Words =null;
+		this.Words.addAll(wordlist);
+	}
+	public void setDocNum(int docNum){
+		this.DocNum = docNum;
+	}
+	public void setThreshold( List<Double> threshold){
+		this.Threshold=null;
 		this.Threshold.addAll(threshold);
 	}
 	
 	public void inti(){
-
-		this.DicWords = new HashMap<String,Double>();
-		this.UnKWords= new HashMap<String,Double>();
-		this.NewWordsPMIValue = new Hashtable<String,Map<String,Double>>();
 		
 		boolean tmpflag = false;
+
 		for (String s:this.Words){
 			tmpflag = false;
 			for (int i=0;i<this.Dictionarys.size();i++){
@@ -48,12 +109,14 @@ public class PMI{
 			if(!tmpflag){
 				this.UnKWords.put(s,(double)this.InvertedIndex.get(s).size()/(double)DocNum);
 				this.NewWordsPMIValue.put(s, new Hashtable<String,Double>());
+
 			}
 		}
 		
 	}
+	
 	private double JointPro(String x,String y){
-		//x from dictionary y from unknow word
+		//x from dictionary y from unknow word calculate the P(x.y)
 
 		double cont=0;
 		for (Integer i :this.InvertedIndex.get(x)){
@@ -82,15 +145,24 @@ public class PMI{
 				Map.Entry entry_x = (Map.Entry) iter_x.next();
 				P_x = (Double)entry_x.getValue();
 				X =(String) entry_x.getKey();
-				this.NewWordsPMIValue.get(Y).put(X, Double.valueOf(this.JointPro(X, Y)/(P_x*P_y)));
-			
+				double tmpPMIValue = this.JointPro(X, Y)/(P_x*P_y);
+				this.NewWordsPMIValue.get(Y).put(X, Double.valueOf(tmpPMIValue));
+				for (int i=0;i<this.Dictionarys.size();i++){
+					if (tmpPMIValue>this.Threshold.get(i)){
+						this.NewWordList.get(i).add(Y);
+					}
+				}
 			}
 					
 		}
 		
 	}
-	private void GetNewWords(){
-		for 
+	public List<List<String>> GetNewWords(){
+		return this.NewWordList;
+	}
+	
+	public void setNewWordValue(){
+		
 	}
 	
 	public void ComputePMI(){
